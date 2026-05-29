@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register Profile</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>New User Registration</h2>
+        <div id="statusMessage" class="msg"></div>
+        <p>Registering ID: <strong id="displayId"></strong></p>
+
+        <form id="registerForm">
+            <div class="form-group"><label>First Name</label><input type="text" id="fname" required></div>
+            <div class="form-group"><label>Middle Name</label><input type="text" id="mname"></div>
+            <div class="form-group"><label>Last Name</label><input type="text" id="lname" required></div>
+            <div class="form-group"><label>Barangay</label><input type="text" id="brgy" required></div>
+            <div class="form-group"><label>City/Town</label><input type="text" id="city" required></div>
+            <div class="form-group"><label>Province</label><input type="text" id="prov" required></div>
+            <div class="form-group"><label>Contact Number</label><input type="text" id="contact" required></div>
+            <div class="form-group"><label>Email</label><input type="email" id="email" required></div>
+            <button type="submit" class="btn-success">Register & Sign In</button>
+        </form>
+    </div>
+
+    <script>
+        // Extract ID from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('id');
+        
+        if(!userId) window.location.href = 'index.html';
+        document.getElementById('displayId').innerText = userId;
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                user_id: userId,
+                fname: document.getElementById('fname').value,
+                mname: document.getElementById('mname').value,
+                lname: document.getElementById('lname').value,
+                brgy: document.getElementById('brgy').value,
+                city: document.getElementById('city').value,
+                prov: document.getElementById('prov').value,
+                contact: document.getElementById('contact').value,
+                email: document.getElementById('email').value
+            };
+
+            const response = await fetch('api/register_user.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+
+            if(data.status === 'success') {
+                alert("Registration complete. You are now signed in.");
+                window.location.href = 'index.html';
+            } else {
+                const msgDiv = document.getElementById('statusMessage');
+                msgDiv.className = 'msg error';
+                msgDiv.innerText = data.message;
+            }
+        });
+    </script>
+</body>
+</html>

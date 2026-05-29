@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="container admin-container">
+    <h2>Contact Tracing Records</h2>
+    <div id="authSection">
+        <div id="loginMsg" class="msg"></div>
+        <form id="loginForm">
+            <div class="form-group"><input type="text" id="adminUser" placeholder="Admin Username" required></div>
+            <div class="form-group"><input type="password" id="adminPass" placeholder="Password" required></div>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <div id="dashboardSection" style="display: none;">
+        <form id="searchForm" style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <select id="filterType">
+                <option value="last_name">Last Name</option>
+                <option value="user_id">ID Number</option>
+                <option value="city">City</option>
+                <option value="time_in">Date (YYYY-MM-DD)</option>
+            </select>
+            <input type="text" id="searchKeyword" placeholder="Search keyword...">
+            <button type="submit" style="width: auto;">Search</button>
+            <button type="button" id="clearBtn" style="width: auto; background:#6c757d;">Clear</button>
+        </form>
+
+        <table id="recordsTable">
+            <thead>
+                <tr>
+                    <th>ID</th><th>Name</th><th>Location</th><th>Time In</th><th>Time Out</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            // In a production app, use proper session tokens (JWT/Cookies). 
+            // For this scope, passing credentials to the API to authorize the data pull is sufficient.
+            fetchData();
+        });
+
+        document.getElementById('searchForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            fetchData();
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            document.getElementById('searchKeyword').value = '';
+            fetchData();
+        });
+
+        async function fetchData() {
+            const user = document.getElementById('adminUser').value;
+            const pass = document.getElementById('adminPass').value;
+            const filter = document.getElementById('filterType').value;
+            const keyword = document.getElementById('searchKeyword').value;
+
+            const response = await fetch(`api/admin_records.php?filter=${filter}&keyword=${keyword}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Basic ' + btoa(user + ":" + pass)
+                }
+            });
+            const data = await response.json();
+
+            if(data.status === 'unauthorized') {
+                const msg = document.getElementById('loginMsg');
+                msg.className = 'msg error';
+                msg.innerText = 'Invalid credentials';
+            } else {
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('dashboardSection').style.display = 'block';
+                renderTable(data.records);
+            }
+        }
+
+        function renderTable(records) {
+            const tbody = document.querySelector('#recordsTable tbody');
+            tbody.innerHTML = '';
+            if(records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">No records found.</td></tr>';
+                return;
+            }
+            records.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${r.user_id}</td>
+                    <td>${r.last_name}, ${r.first_name}</td>
+                    <td>${r.barangay}, ${r.city}, ${r.province}</td>
+                    <td>${r.time_in}</td>
+                    <td>${r.time_out ? r.time_out : '<span style="color:red;">Active</span>'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>

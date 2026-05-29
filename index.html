@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contact Tracing Kiosk</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Department Contact Tracing</h2>
+        <div id="statusMessage" class="msg"></div>
+
+        <form id="kioskForm">
+            <div class="form-group">
+                <label for="user_id">Enter ID Number:</label>
+                <input type="text" id="user_id" required autofocus>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+        <br>
+        <div style="text-align: center;"><a href="admin.html" style="font-size: 12px; color: gray;">Admin Access</a></div>
+    </div>
+
+    <script>
+        document.getElementById('kioskForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userId = document.getElementById('user_id').value;
+            const msgDiv = document.getElementById('statusMessage');
+
+            try {
+                const response = await fetch('api/process_kiosk.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId })
+                });
+                
+                const data = await response.json();
+
+                if (data.status === 'not_found') {
+                    // Redirect to registration, passing the ID in the URL
+                    window.location.href = `register.html?id=${encodeURIComponent(userId)}`;
+                } else if (data.status === 'success') {
+                    msgDiv.className = 'msg success';
+                    msgDiv.innerText = data.message;
+                    document.getElementById('user_id').value = ''; // clear input
+                } else {
+                    msgDiv.className = 'msg error';
+                    msgDiv.innerText = data.message;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
