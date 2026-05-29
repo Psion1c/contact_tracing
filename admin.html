@@ -6,6 +6,11 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="container admin-container">
+    
+    <div style="margin-bottom: 10px;">
+        <a href="index.html" style="text-decoration: none; color: #0056b3; font-weight: bold;">&larr; Back to Kiosk</a>
+    </div>
+
     <h2>Contact Tracing Records</h2>
     <div id="authSection">
         <div id="loginMsg" class="msg"></div>
@@ -42,8 +47,6 @@
     <script>
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            // In a production app, use proper session tokens (JWT/Cookies). 
-            // For this scope, passing credentials to the API to authorize the data pull is sufficient.
             fetchData();
         });
 
@@ -63,10 +66,12 @@
             const filter = document.getElementById('filterType').value;
             const keyword = document.getElementById('searchKeyword').value;
 
+            // Updated headers to bypass XAMPP blocking
             const response = await fetch(`api/admin_records.php?filter=${filter}&keyword=${keyword}`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': 'Basic ' + btoa(user + ":" + pass)
+                    'X-Admin-User': user,
+                    'X-Admin-Pass': pass
                 }
             });
             const data = await response.json();

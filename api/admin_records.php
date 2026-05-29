@@ -2,21 +2,21 @@
 header('Content-Type: application/json');
 require 'db.php';
 
-// Basic Auth extraction
-$headers = apache_request_headers();
-if (!isset($headers['Authorization'])) {
-    echo json_encode(["status" => "unauthorized"]);
+// Extract credentials from custom headers (Bypasses XAMPP Authorization stripping)
+$user = $_SERVER['HTTP_X_ADMIN_USER'] ?? '';
+$pass = $_SERVER['HTTP_X_ADMIN_PASS'] ?? '';
+
+if (empty($user) || empty($pass)) {
+    echo json_encode(["status" => "unauthorized", "message" => "Missing credentials"]);
     exit();
 }
-$auth = base64_decode(substr($headers['Authorization'], 6));
-list($user, $pass) = explode(':', $auth);
 
 // Validate Admin Credentials
 $stmt = $conn->prepare("SELECT admin_id FROM admins WHERE username = ? AND password = ?");
 $stmt->bind_param("ss", $user, $pass);
 $stmt->execute();
 if ($stmt->get_result()->num_rows !== 1) {
-    echo json_encode(["status" => "unauthorized"]);
+    echo json_encode(["status" => "unauthorized", "message" => "Invalid credentials"]);
     exit();
 }
 
